@@ -1,6 +1,6 @@
 module github.com/DeloitteOptimalReality/airflow-wrapper-go
 
-go 1.22.5
+go 1.22
 
 require (
 	github.com/apache/airflow-client-go/airflow v0.0.0-20230210234754-8ce0b39cfbb2
