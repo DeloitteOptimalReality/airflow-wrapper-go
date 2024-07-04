@@ -3,7 +3,6 @@ module github.com/DeloitteOptimalReality/airflow-wrapper-go
 go 1.22.5
 
 require (
-	dev.azure.com/dd-managed-services/optimal-reality-product/or-plugin-airflow.git v0.0.0-20240703011658-a81c215ca18d
 	github.com/apache/airflow-client-go/airflow v0.0.0-20230210234754-8ce0b39cfbb2
 	golang.org/x/net v0.0.0-20200822124328-c89045814202
 )

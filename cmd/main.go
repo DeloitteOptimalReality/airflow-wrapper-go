@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/DeloitteOptimalReality/airflow-wrapper-go/client"
+	"github.com/DeloitteOptimalReality/airflow-wrapper-go/pkg/client"
 )
 
 func main() {

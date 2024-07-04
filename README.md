@@ -7,7 +7,7 @@ To use this library, you need to have Go installed on your machine. You can down
 # Usage
 To import the library in your project, you can use the following command:
 ```go
-import "github.com/airflow-client-go-wrapper/airflow"
+import "github.com/DeloitteOptimalReality/airflow-wrapper-go/pkg/client"
 ```
 
 To setup a client, you can use the following code:
