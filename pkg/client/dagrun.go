@@ -57,3 +57,17 @@ func (c *AirflowClient) GetLatestDagRun(dagId string) (*airflow.DAGRun, error) {
 
 	return &latestDagRun, nil
 }
+
+func (c *AirflowClient) GetLatestDagRunAndTasks(dagId string) (*airflow.DAGRun, airflow.TaskInstanceCollection, error) {
+	latestRun, err := c.GetLatestDagRun(dagId)
+	if err != nil {
+		return nil, *airflow.NewTaskInstanceCollection(), err
+	}
+
+	latestTasks, err := c.GetTaskInstances(dagId, latestRun.GetDagRunId())
+	if err != nil {
+		return nil, latestTasks, err
+	}
+
+	return latestRun, latestTasks, nil
+}

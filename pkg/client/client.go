@@ -9,6 +9,7 @@ type AirflowClientInterface interface {
 	GetDagRun(dagId string, dagRunId string) (*airflow.DAGRun, error)
 	GetDagRunList(dagId string) (*airflow.DAGRunCollection, error)
 	GetLatestDagRun(dagId string) (*airflow.DAGRun, error)
+	GetLatestDagRunAndTasks(dagId string) (*airflow.DAGRun, airflow.TaskInstanceCollection, error)
 	ExecuteDagRun(dagId string) (*airflow.DAGRun, error)
 	GetLog(dagId string, dagRunId string, taskId string, taskTryNumber int32) (airflow.InlineResponse200, error)
 	GetTaskLogs(dagId string, dagRunId string, taskId string) ([]airflow.InlineResponse200, error)
