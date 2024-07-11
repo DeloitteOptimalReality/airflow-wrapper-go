@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/apache/airflow-client-go/airflow"
 	"golang.org/x/net/context"
@@ -99,11 +100,19 @@ func (c *AirflowClient) GetAllTaskInstancesAndDagRuns(dagId string) ([]airflow.T
 	var allDagRunsInfo []DagRunInfo
 	var allTaskInstances []airflow.TaskInstanceCollection
 	for _, dagRun := range *dagRuns.DagRuns {
+
+		// If the dag run hasn't completed, enddate = now
+		startdate := *dagRun.StartDate.Get()
+		enddate := time.Time{} // EndDate might be null so we initialise with empty time
+		if dagRun.EndDate.Get() == nil {
+			enddate = time.Now()
+		}
+
 		// Insert Dag run info into struct then append to dag list
 		dagRunStruct := DagRunInfo{
 			DagRunId:  string(*dagRun.DagRunId.Get()),
-			StartDate: *dagRun.StartDate.Get(),
-			EndDate:   *dagRun.EndDate.Get(),
+			StartDate: startdate,
+			EndDate:   enddate,
 			Status:    string(*dagRun.State),
 		}
 		allDagRunsInfo = append(allDagRunsInfo, dagRunStruct)
