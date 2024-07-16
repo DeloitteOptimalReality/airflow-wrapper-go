@@ -10,7 +10,7 @@ import (
 type DagRunInfo struct {
 	DagId     string
 	DagRunId  string // Could use airflow.NullableString but think processing to string will make it easier
-	StartDate time.Time
-	EndDate   time.Time
-	Status    airflow.DagState
+	StartDate *time.Time
+	EndDate   *time.Time
+	Status    *airflow.DagState
 }
