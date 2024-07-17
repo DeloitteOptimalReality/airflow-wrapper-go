@@ -99,12 +99,14 @@ func (c *AirflowClient) GetAllTaskInstancesAndDagRuns(dagId string) ([]airflow.T
 	var allDagRunsInfo []DagRunInfo
 	var allTaskInstances []airflow.TaskInstanceCollection
 	for _, dagRun := range *dagRuns.DagRuns {
+
 		// Insert Dag run info into struct then append to dag list
 		dagRunStruct := DagRunInfo{
+			DagId:     dagId,
 			DagRunId:  string(*dagRun.DagRunId.Get()),
-			StartDate: *dagRun.StartDate.Get(),
-			EndDate:   *dagRun.EndDate.Get(),
-			Status:    string(*dagRun.State),
+			StartDate: dagRun.StartDate.Get(),
+			EndDate:   dagRun.EndDate.Get(),
+			Status:    dagRun.State,
 		}
 		allDagRunsInfo = append(allDagRunsInfo, dagRunStruct)
 

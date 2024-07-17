@@ -48,6 +48,7 @@ func (c *AirflowClient) GetLatestDagRun(dagId string) (*airflow.DAGRun, error) {
 		return nil, err
 	}
 
+	// Doesn't work after 99th dag run
 	nRuns := len(*dagRuns.DagRuns)
 	if len(*dagRuns.DagRuns) == 0 {
 		return nil, fmt.Errorf("no dag runs found for %s", dagId)
