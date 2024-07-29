@@ -14,7 +14,7 @@ from airflow.utils.db import provide_session
 os.environ["no_proxy"] = "*"
 default_args = {
     'owner': 'airflow',
-    'depends_on_past': {{.DagDef.DefaultArgs.DependsOnPast|BoolTitle}},
+    'depends_on_past': {{.DagDef.DefaultArgs.DependsOnPast | BoolTitle}},
     'email': ['{{.DagDef.DefaultArgs.Email}}'],
     'email_on_failure': False,
     'email_on_retry': False,
@@ -56,21 +56,28 @@ def create_http_connection(session=None):
 
     return '{{.ConnectionDef.ConnectionID}}'
 
-{{.ConnectionDef.ConnectionID}} = PythonOperator(
+{{ transformTaskID .ConnectionDef.ConnectionID }} = PythonOperator(
     task_id='{{.ConnectionDef.ConnectionID}}',
     python_callable=create_http_connection,
     dag=dag,
 )
 
-{{range .Tasks}}
-{{.TaskID}}_data = {{mapToPythonDict .Data}}
+# Dictionary to map transformed task IDs to original task IDs
+task_id_map = {
+    {{- range $original, $transformed := originalTaskIDMap }}
+    "{{ $transformed }}": "{{ $original }}",
+    {{- end }}
+}
 
-{{.TaskID}} = SimpleHttpOperator(
+{{range .Tasks}}
+{{ transformTaskID .TaskID }}_data = {{mapToPythonDict .Data}}
+
+{{ transformTaskID .TaskID }} = SimpleHttpOperator(
     task_id='{{.TaskID}}',
     method='POST',
     http_conn_id='{{$.ConnectionDef.ConnectionID}}',
     endpoint='{{.Endpoint}}',
-    data=json.dumps({{.TaskID}}_data),
+    data=json.dumps({{ transformTaskID .TaskID }}_data),
     headers={"Content-Type": "application/json"},
     log_response=True,
     dag=dag,
@@ -79,16 +86,15 @@ def create_http_connection(session=None):
 
 {{- if checkDeps .ConnectionDef.Downstream }}
 {{- range $dep := .ConnectionDef.Downstream}}
-{{$.ConnectionDef.ConnectionID}}.set_downstream({{ $dep }})
+{{ transformTaskID $.ConnectionDef.ConnectionID }}.set_downstream({{ transformTaskID $dep }})
 {{- end -}}
 {{- end -}}
 
 {{range .Tasks }}
 {{if checkDeps .Downstream -}}
-{{ $taskId := .TaskID -}}
+{{ $taskId := transformTaskID .TaskID -}}
 {{range $dep := .Downstream -}}
-{{$taskId}}.set_downstream({{$dep}})
+{{$taskId}}.set_downstream({{ transformTaskID $dep }})
 {{ end -}}
 {{ end -}}
 {{ end -}}
-
