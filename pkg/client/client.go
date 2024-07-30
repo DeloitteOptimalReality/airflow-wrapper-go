@@ -25,6 +25,7 @@ type AirflowClientInterface interface {
 	GetTaskInstanceForAllDagRuns(dagId string, taskId string) ([]airflow.TaskInstance, error)
 	GetTaskInstancesForLatestDagRun(dagId string) (airflow.TaskInstanceCollection, error)
 	GetAllTaskInstancesAndDagRuns(dagId string) ([]airflow.TaskInstanceCollection, []DagRunInfo, error)
+	UnpauseDag(dagId string) error
 }
 
 type AirflowClient struct {

@@ -9,6 +9,12 @@ import (
 
 func (c *AirflowClient) ExecuteDagRun(dagId string) (*airflow.DAGRun, error) {
 	ctx := context.WithValue(context.Background(), airflow.ContextBasicAuth, c.airflowCredentials)
+
+	err := c.UnpauseDag(dagId)
+	if err != nil {
+		return nil, err
+	}
+
 	executeDagRunRequest := c.airflowClient.DAGRunApi.PostDagRun(ctx, dagId)
 	executeDagRunRequest = executeDagRunRequest.DAGRun(*airflow.NewDAGRunWithDefaults())
 
