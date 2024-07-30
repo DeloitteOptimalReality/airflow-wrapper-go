@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -113,13 +114,24 @@ func BoolTitle(b bool) string {
 	return "False"
 }
 
+// Function to transform the task ID
+func transformTaskID(taskID string) string {
+	return "wt_" + strings.ReplaceAll(taskID, "-", "_")
+}
+
 func CreateDagGen(g GenData, directory string) (string, error) {
 	data := g
 	if data.DagDef.ID == "" {
 		return "", fmt.Errorf("DAG ID is required")
 	}
 
-	t := template.New("dag").Funcs(template.FuncMap{"toJSONString": toJSONString, "BoolTitle": BoolTitle, "mapToPythonDict": mapToPythonDict, "checkDeps": checkDeps})
+	// Prepare a map of original task IDs to transformed task IDs
+	taskIDMap := make(map[string]string)
+	for _, task := range data.Tasks {
+		taskIDMap[task.TaskID] = transformTaskID(task.TaskID)
+	}
+
+	t := template.New("dag").Funcs(template.FuncMap{"toJSONString": toJSONString, "BoolTitle": BoolTitle, "mapToPythonDict": mapToPythonDict, "checkDeps": checkDeps, "transformTaskID": transformTaskID, "originalTaskIDMap": func() map[string]string { return taskIDMap }})
 	tp, err := t.Parse(tmpl)
 
 	if err != nil {
