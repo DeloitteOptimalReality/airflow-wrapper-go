@@ -27,6 +27,23 @@ func (c *AirflowClient) GetDag(dagId string) (*airflow.DAG, error) {
 	return &dagDetails, nil
 }
 
+func (c *AirflowClient) GetAllDags() (*airflow.DAGCollection, error) {
+	ctx := context.WithValue(context.Background(), airflow.ContextBasicAuth, c.airflowCredentials)
+	getDagsRequest := c.airflowClient.DAGApi.GetDags(ctx)
+
+	dagDetails, resp, err := getDagsRequest.Execute()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("failed to get all DAGs: %s", resp.Status)
+	}
+
+	return &dagDetails, nil
+}
+
 func (c *AirflowClient) UnpauseDag(dagId string) error {
 	dag, err := c.GetDag(dagId)
 	if err != nil {

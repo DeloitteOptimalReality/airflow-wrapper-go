@@ -6,6 +6,7 @@ import (
 
 type AirflowClientInterface interface {
 	GetDag(dagId string) (*airflow.DAG, error)
+	GetAllDags() (*airflow.DAGCollection, error)
 	GetDagRun(dagId string, dagRunId string) (*airflow.DAGRun, error)
 	GetDagRunList(dagId string) (*airflow.DAGRunCollection, error)
 	GetLatestDagRun(dagId string) (*airflow.DAGRun, error)
