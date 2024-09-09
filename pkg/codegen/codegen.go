@@ -52,21 +52,50 @@ type Connection struct {
 }
 
 type HttpOperator struct {
-	TaskID     string
-	Name       string
-	Endpoint   string
-	Data       interface{}
-	Downstream []string
+	TaskID       string
+	ConnectionId string
+	Name         string
+	Endpoint     string
+	Data         interface{}
+	Downstream   []string
 }
 
 type GenData struct {
-	DagDef        Dag
-	ConnectionDef Connection
-	Tasks         []HttpOperator
+	DagDef      Dag
+	Connections []Connection
+	Tasks       []HttpOperator
 }
 
 func checkDeps(deps []string) bool {
 	return len(deps) > 0
+}
+
+func writeValueToBuffer(v interface{}, buf *bytes.Buffer) bool {
+	switch v := v.(type) {
+	case bool:
+		if v {
+			buf.WriteString("True")
+		} else {
+			buf.WriteString("False")
+		}
+	case string:
+		buf.WriteString("'")
+		buf.WriteString(v)
+		buf.WriteString("'")
+	default:
+		buf.WriteString(fmt.Sprintf("%v", v))
+	}
+	return true
+}
+
+func toMap(v interface{}) (map[string]interface{}, error) {
+	var res map[string]interface{}
+	a, err := json.Marshal(v)
+	if err != nil {
+		return res, err
+	}
+	json.Unmarshal(a, &res)
+	return res, err
 }
 
 // Function to convert a Go map to a Python dictionary string
@@ -83,16 +112,12 @@ func mapToPythonDict(m map[string]interface{}) (string, error) {
 		buf.WriteString(k)
 		buf.WriteString("': ")
 		switch v := v.(type) {
-		case bool:
-			if v {
-				buf.WriteString("True")
-			} else {
-				buf.WriteString("False")
+		case []interface{}:
+			buf.WriteString("[")
+			for _, k_val := range v {
+				writeValueToBuffer(k_val, &buf)
 			}
-		case string:
-			buf.WriteString("'")
-			buf.WriteString(v)
-			buf.WriteString("'")
+			buf.WriteString("]")
 		case map[string]interface{}:
 			nested, err := mapToPythonDict(v)
 			if err != nil {
@@ -100,7 +125,7 @@ func mapToPythonDict(m map[string]interface{}) (string, error) {
 			}
 			buf.WriteString(nested)
 		default:
-			buf.WriteString(fmt.Sprintf("%v", v))
+			writeValueToBuffer(v, &buf)
 		}
 	}
 	buf.WriteString("}")
@@ -131,7 +156,16 @@ func CreateDagGen(g GenData, directory string) (string, error) {
 		taskIDMap[task.TaskID] = transformTaskID(task.TaskID)
 	}
 
-	t := template.New("dag").Funcs(template.FuncMap{"toJSONString": toJSONString, "BoolTitle": BoolTitle, "mapToPythonDict": mapToPythonDict, "checkDeps": checkDeps, "transformTaskID": transformTaskID, "originalTaskIDMap": func() map[string]string { return taskIDMap }})
+	t := template.New("dag").Funcs(
+		template.FuncMap{
+			"toJSONString":      toJSONString,
+			"toMap":             toMap,
+			"BoolTitle":         BoolTitle,
+			"mapToPythonDict":   mapToPythonDict,
+			"checkDeps":         checkDeps,
+			"transformTaskID":   transformTaskID,
+			"originalTaskIDMap": func() map[string]string { return taskIDMap },
+		})
 	tp, err := t.Parse(tmpl)
 
 	if err != nil {
