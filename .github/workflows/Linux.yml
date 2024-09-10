@@ -5,7 +5,7 @@ name: Linux(ubuntu)
 
 on:
   push:
-    branches: [ "main", "CORP-5480-update-dag-template" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 

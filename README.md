@@ -1,5 +1,5 @@
 
-![Actions Status](https://github.com/DeloitteOptimalReality/airflow-wrapper-go/actions/workflows/Linux.yml/badge.svg?branch=CORP-5480-update-dag-template)
+[![Actions Status](https://github.com/DeloitteOptimalReality/airflow-wrapper-go/actions/workflows/Linux.yml/badge.svg?branch=main)](https://github.com/DeloitteOptimalReality/airflow-wrapper-go/actions)
 
 # Introduction 
 This is a wrapper library of the airflow-client-go library. The library is written in Go and allows your to create clients with interface methods to interact with the Apache Airflow REST API.
