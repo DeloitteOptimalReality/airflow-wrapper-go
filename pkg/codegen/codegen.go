@@ -22,12 +22,12 @@ type Args struct {
 }
 
 // Function to convert an interface to a JSON string
-func toJSONString(v interface{}) string {
+func ToJSONString(v interface{}) (string, error) {
 	jsonData, err := json.Marshal(v)
 	if err != nil {
-		return ""
+		return "", err
 	}
-	return string(jsonData)
+	return string(jsonData), nil
 }
 
 type StartDate struct {
@@ -52,25 +52,55 @@ type Connection struct {
 }
 
 type HttpOperator struct {
-	TaskID     string
-	Name       string
-	Endpoint   string
-	Data       interface{}
-	Downstream []string
+	TaskID       string
+	ConnectionId string
+	Name         string
+	Endpoint     string
+	Data         interface{}
+	Downstream   []string
 }
 
 type GenData struct {
-	DagDef        Dag
-	ConnectionDef Connection
-	Tasks         []HttpOperator
+	DagDef      Dag
+	Connections []Connection
+	Tasks       []HttpOperator
 }
 
-func checkDeps(deps []string) bool {
+func CheckDeps(deps []string) bool {
 	return len(deps) > 0
 }
 
+func writeValueToBuffer(v interface{}, buf *bytes.Buffer) bool {
+	switch v := v.(type) {
+	case bool:
+		if v {
+			buf.WriteString("True")
+		} else {
+			buf.WriteString("False")
+		}
+	case string:
+		buf.WriteString("\"")
+		buf.WriteString(v)
+		buf.WriteString("\"")
+	default:
+		buf.WriteString(fmt.Sprintf("%v", v))
+	}
+	return true
+}
+
+func ToMap(v interface{}) (map[string]interface{}, error) {
+	var res map[string]interface{}
+	fmt.Println("MARSHAlling")
+	a, err := json.Marshal(v)
+	if err != nil {
+		return res, err
+	}
+	json.Unmarshal(a, &res)
+	return res, err
+}
+
 // Function to convert a Go map to a Python dictionary string
-func mapToPythonDict(m map[string]interface{}) (string, error) {
+func MapToPythonDict(m map[string]interface{}) (string, error) {
 	var buf bytes.Buffer
 	buf.WriteString("{")
 	first := true
@@ -79,28 +109,24 @@ func mapToPythonDict(m map[string]interface{}) (string, error) {
 			buf.WriteString(", ")
 		}
 		first = false
-		buf.WriteString("'")
+		buf.WriteString("\"")
 		buf.WriteString(k)
-		buf.WriteString("': ")
+		buf.WriteString("\": ")
 		switch v := v.(type) {
-		case bool:
-			if v {
-				buf.WriteString("True")
-			} else {
-				buf.WriteString("False")
+		case []interface{}:
+			buf.WriteString("[")
+			for _, k_val := range v {
+				writeValueToBuffer(k_val, &buf)
 			}
-		case string:
-			buf.WriteString("'")
-			buf.WriteString(v)
-			buf.WriteString("'")
+			buf.WriteString("]")
 		case map[string]interface{}:
-			nested, err := mapToPythonDict(v)
+			nested, err := MapToPythonDict(v)
 			if err != nil {
 				return "", err
 			}
 			buf.WriteString(nested)
 		default:
-			buf.WriteString(fmt.Sprintf("%v", v))
+			writeValueToBuffer(v, &buf)
 		}
 	}
 	buf.WriteString("}")
@@ -115,7 +141,7 @@ func BoolTitle(b bool) string {
 }
 
 // Function to transform the task ID
-func transformTaskID(taskID string) string {
+func TransformTaskID(taskID string) string {
 	return "wt_" + strings.ReplaceAll(taskID, "-", "_")
 }
 
@@ -128,10 +154,19 @@ func CreateDagGen(g GenData, directory string) (string, error) {
 	// Prepare a map of original task IDs to transformed task IDs
 	taskIDMap := make(map[string]string)
 	for _, task := range data.Tasks {
-		taskIDMap[task.TaskID] = transformTaskID(task.TaskID)
+		taskIDMap[task.TaskID] = TransformTaskID(task.TaskID)
 	}
 
-	t := template.New("dag").Funcs(template.FuncMap{"toJSONString": toJSONString, "BoolTitle": BoolTitle, "mapToPythonDict": mapToPythonDict, "checkDeps": checkDeps, "transformTaskID": transformTaskID, "originalTaskIDMap": func() map[string]string { return taskIDMap }})
+	t := template.New("dag").Funcs(
+		template.FuncMap{
+			"toJSONString":      ToJSONString,
+			"toMap":             ToMap,
+			"BoolTitle":         BoolTitle,
+			"mapToPythonDict":   MapToPythonDict,
+			"checkDeps":         CheckDeps,
+			"transformTaskID":   TransformTaskID,
+			"originalTaskIDMap": func() map[string]string { return taskIDMap },
+		})
 	tp, err := t.Parse(tmpl)
 
 	if err != nil {
