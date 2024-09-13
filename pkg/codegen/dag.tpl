@@ -92,7 +92,9 @@ task_id_map = {
     log_response=True,
     dag=dag,
     use_cache=True,
-    # dependencies=[] # TODO: This needs to be implemented
+    {{- if checkDeps .Upstream }}
+    dependencies=[{{- range $dep := .Upstream}}"{{$dep}}",{{- end -}}]
+    {{- end}}
 ){{ end }}
 
 # ##################### DIRECTED ACYLIC GRAPH DEFINITION ##########################
