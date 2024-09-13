@@ -58,6 +58,7 @@ type HttpOperator struct {
 	Endpoint     string
 	Data         interface{}
 	Downstream   []string
+	Upstream     []string
 }
 
 type GenData struct {
