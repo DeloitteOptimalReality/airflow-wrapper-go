@@ -83,6 +83,7 @@ task_id_map = {
 {{range .Tasks}}
 {{ transformTaskID .TaskID }}_data = {{mapToPythonDict .Data}}
 {{ transformTaskID .TaskID }} = ORHttpOperator(
+    name='{{.Name}}',
     task_id='{{.TaskID}}',
     method='POST',
     http_conn_id='{{.ConnectionId}}',
