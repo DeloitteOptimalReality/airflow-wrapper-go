@@ -85,6 +85,7 @@ task_id_map = {
 {{ transformTaskID .TaskID }} = ORHttpOperator(
     name='{{.Name}}',
     task_id='{{.TaskID}}',
+    allow_illegal_argument=True,
     method='POST',
     http_conn_id='{{.ConnectionId}}',
     endpoint='{{.Endpoint}}',
