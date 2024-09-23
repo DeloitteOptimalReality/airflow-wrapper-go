@@ -39,15 +39,15 @@ dag = DAG(
 # ##################### HELPER FUNCTIONS ##########################
 
 @provide_session
-def create_http_connection(conn, session=None):
+def create_http_connection(custom_conn_config, session=None):
     connection = session.query(Connection).filter(
-        Connection.conn_id == conn['ConnectionID']).first()
+        Connection.conn_id == custom_conn_config['ConnectionID']).first()
 
     if connection:
-        connection.conn_id = conn['ConnectionID']
+        connection.conn_id = custom_conn_config['ConnectionID']
         connection.conn_type = 'http'
-        connection.host = conn['Host']
-        connection.port = conn['Port']
+        connection.host = custom_conn_config['Host']
+        connection.port = custom_conn_config['Port']
         session.commit()
     else:
         # Create a new connection if it doesn't exist
@@ -59,7 +59,7 @@ def create_http_connection(conn, session=None):
         )
         session.add(connection)
         session.commit()
-    return f'Connection {conn["ConnectionID"]} successful!'
+    return f'Connection {custom_conn_config["ConnectionID"]} successful!'
 
 # ##################### ESTABLISH DB/REDIS CONNECTIONS #######################
 {{range $conn := .Connections}}
@@ -85,7 +85,6 @@ task_id_map = {
 {{ transformTaskID .TaskID }} = ORHttpOperator(
     name='{{.Name}}',
     task_id='{{.TaskID}}',
-    allow_illegal_argument=True,
     method='POST',
     http_conn_id='{{.ConnectionId}}',
     endpoint='{{.Endpoint}}',
