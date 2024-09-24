@@ -52,10 +52,10 @@ def create_http_connection(custom_conn_config, session=None):
     else:
         # Create a new connection if it doesn't exist
         connection = Connection(
-            conn_id=conn['ConnectionID'],
+            conn_id=custom_conn_config['ConnectionID'],
             conn_type='http',
-            host=conn['Host'],
-            port=conn['Port']
+            host=custom_conn_config['Host'],
+            port=custom_conn_config['Port']
         )
         session.add(connection)
         session.commit()
