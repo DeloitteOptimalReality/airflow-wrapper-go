@@ -30,7 +30,7 @@ func TestCreateDagObject(t *testing.T) {
 }
 
 func TestToMapValid(t *testing.T) {
-	testStruct := codegen.HttpOperator{
+	testStruct := codegen.HttpTask{
 		TaskID:       "test_task_id",
 		ConnectionId: "test_connection_id",
 		Name:         "test_name",
@@ -51,6 +51,25 @@ func TestToMapValid(t *testing.T) {
 }
 
 // TODO: Test the invalid case for ToMap function. I'm not sure how to hit the edge case yet.
+
+func TestToMapValidWithPythonTask(t *testing.T) {
+	testStruct := codegen.PythonTask{
+		TaskID:     "test_python_task_id",
+		Name:       "test_name",
+		Data:       map[string]interface{}{"key": "value"},
+		Downstream: []string{"downstream_task_1", "downstream_task_2"},
+		Upstream:   []string{"upstream_task_1"},
+	}
+	res, err := codegen.ToMap(testStruct)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, res["Name"], "test_name")
+	assert.Equal(t, res["TaskID"], "test_python_task_id")
+	assert.Equal(t, res["Data"], map[string]interface{}{"key": "value"})
+	assert.ElementsMatch(t, res["Downstream"], []interface{}{"downstream_task_1", "downstream_task_2"})
+	assert.ElementsMatch(t, res["Upstream"], []interface{}{"upstream_task_1"})
+}
 
 func TestMapToPythonDict(t *testing.T) {
 	expectedPythonDict := `

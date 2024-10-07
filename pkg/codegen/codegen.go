@@ -51,7 +51,7 @@ type Connection struct {
 	Downstream   []string
 }
 
-type HttpOperator struct {
+type HttpTask struct {
 	TaskID       string
 	ConnectionId string
 	Name         string
@@ -61,10 +61,20 @@ type HttpOperator struct {
 	Upstream     []string
 }
 
+type PythonTask struct {
+	TaskID     string
+	Name       string
+	Data       interface{}
+	Downstream []string
+	Upstream   []string
+}
+
 type GenData struct {
-	DagDef      Dag
-	Connections []Connection
-	Tasks       []HttpOperator
+	DagDef        Dag
+	Connections   []Connection
+	PythonImports []string
+	Tasks         []HttpTask
+	PythonTask    []PythonTask
 }
 
 func CheckDeps(deps []string) bool {
@@ -157,6 +167,9 @@ func CreateDagGen(g GenData, directory string) (string, error) {
 	// Prepare a map of original task IDs to transformed task IDs
 	taskIDMap := make(map[string]string)
 	for _, task := range data.Tasks {
+		taskIDMap[task.TaskID] = TransformTaskID(task.TaskID)
+	}
+	for _, task := range data.PythonTask {
 		taskIDMap[task.TaskID] = TransformTaskID(task.TaskID)
 	}
 
