@@ -14,6 +14,9 @@ from airflow.utils.db import provide_session
 # custom OR operator
 from custom_operators.or_http_operator import ORHttpOperator
 
+# Import the Python function saved in airflow-plugins/function
+from functions.custom_function_one import {{ .FunctionName }}
+
 # required so HTTP operator does not crash Python
 os.environ["no_proxy"] = "*"
 default_args = {
@@ -97,6 +100,19 @@ task_id_map = {
     dependencies=[{{- range $dep := .Upstream}}"{{$dep}}",{{- end -}}]
     {{- end}}
 ){{ end }}
+
+# ##################### CUSTOM PYTHON OPERATOR ##########################
+python_operator_task = PythonOperator(
+    task_id='python_operator_task',
+    python_callable={{ .FunctionName }},
+    op_args=[
+        {{range .Request.Params}}"{{.}}",{{end}}
+        {{range .Request.Input}}"{{.}}",{{end}}
+        {{range .Request.Version}}"{{.}}",{{end}}
+        {{range .Request.OutputPath}}"{{.}}",{{end}}
+    ],
+    dag=dag,
+)
 
 # ##################### DIRECTED ACYLIC GRAPH DEFINITION ##########################
 {{range $conn := .Connections}}

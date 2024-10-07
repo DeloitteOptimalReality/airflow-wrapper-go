@@ -61,10 +61,19 @@ type HttpOperator struct {
 	Upstream     []string
 }
 
+type HttpRequest struct {
+	Params     []string
+	Input      []string
+	Version    []string
+	OutputPath []string
+}
+
 type GenData struct {
-	DagDef      Dag
-	Connections []Connection
-	Tasks       []HttpOperator
+	DagDef       Dag
+	Connections  []Connection
+	Tasks        []HttpOperator
+	FunctionName string
+	Request      HttpRequest
 }
 
 func CheckDeps(deps []string) bool {
