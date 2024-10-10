@@ -14,9 +14,6 @@ from airflow.utils.db import provide_session
 # custom OR operator
 from custom_operators.or_http_operator import ORHttpOperator
 
-# Import the Python function saved in airflow-plugins/function
-from functions.custom_function_one import {{ .FunctionName }}
-
 # required so HTTP operator does not crash Python
 os.environ["no_proxy"] = "*"
 default_args = {
@@ -64,6 +61,11 @@ def create_http_connection(custom_conn_config, session=None):
         session.commit()
     return f'Connection {custom_conn_config["ConnectionID"]} successful!'
 
+# ##################### IMPORT SPECIFIC PYTHON FUNCTIONS ##########################
+{{range .PythonImports}}
+from functions.{{ . }} import {{ . }}
+{{ end }}
+
 # ##################### ESTABLISH DB/REDIS CONNECTIONS #######################
 {{range $conn := .Connections}}
 {{ transformTaskID $conn.ConnectionID }} = PythonOperator(
@@ -102,17 +104,16 @@ task_id_map = {
 ){{ end }}
 
 # ##################### CUSTOM PYTHON OPERATOR ##########################
-python_operator_task = PythonOperator(
-    task_id='python_operator_task',
-    python_callable={{ .FunctionName }},
-    op_args=[
-        {{range .Request.Params}}"{{.}}",{{end}}
-        {{range .Request.Input}}"{{.}}",{{end}}
-        {{range .Request.Version}}"{{.}}",{{end}}
-        {{range .Request.OutputPath}}"{{.}}",{{end}}
-    ],
+{{range .PythonTask}}
+{{ transformTaskID .TaskID }}_data = {{mapToPythonDict .Data}}
+{{ transformTaskID .TaskID }} = PythonOperator(
+    task_id='{{ transformTaskID .TaskID }}',
+    python_callable={{ .Name }},
+    data=json.dumps({{ transformTaskID .TaskID }}_data),
+    op_args={{ transformTaskID .TaskID }}_data.get('args', []),
     dag=dag,
 )
+{{ end }}
 
 # ##################### DIRECTED ACYLIC GRAPH DEFINITION ##########################
 {{range $conn := .Connections}}

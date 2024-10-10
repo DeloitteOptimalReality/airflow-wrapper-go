@@ -61,19 +61,21 @@ type HttpOperator struct {
 	Upstream     []string
 }
 
-type HttpRequest struct {
-	Params     []string
-	Input      []string
-	Version    []string
-	OutputPath []string
+type PythonTask struct {
+	TaskID     string
+	Name       string
+	Data       interface{}
+	Downstream []string
+	Upstream   []string
 }
 
 type GenData struct {
-	DagDef       Dag
-	Connections  []Connection
-	Tasks        []HttpOperator
-	FunctionName string
-	Request      HttpRequest
+	DagDef        Dag
+	Connections   []Connection
+	PythonImports []string
+	Tasks         []HttpOperator
+	FunctionName  string
+	PythonTask    []PythonTask
 }
 
 func CheckDeps(deps []string) bool {
