@@ -73,6 +73,8 @@ func CheckDeps(deps []string) bool {
 
 func writeValueToBuffer(v interface{}, buf *bytes.Buffer) bool {
 	switch v := v.(type) {
+	case nil:
+		buf.WriteString("None")
 	case bool:
 		if v {
 			buf.WriteString("True")
