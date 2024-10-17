@@ -61,6 +61,11 @@ def create_http_connection(custom_conn_config, session=None):
         session.commit()
     return f'Connection {custom_conn_config["ConnectionID"]} successful!'
 
+# ##################### IMPORT SPECIFIC PYTHON FUNCTIONS ##########################
+{{range .PythonImports}}
+from custom_functions.{{ . }} import {{ . }}
+{{ end }}
+
 # ##################### ESTABLISH DB/REDIS CONNECTIONS #######################
 {{range $conn := .Connections}}
 {{ transformTaskID $conn.ConnectionID }} = PythonOperator(
@@ -97,6 +102,19 @@ task_id_map = {
     dependencies=[{{- range $dep := .Upstream}}"{{$dep}}",{{- end -}}]
     {{- end}}
 ){{ end }}
+
+# ##################### CUSTOM PYTHON OPERATOR ##########################
+{{range .PythonTask}}
+{{ transformTaskID .TaskID }}_data = {{mapToPythonDict .Data}}
+{{ transformTaskID .TaskID }} = PythonOperator(
+    task_id='{{ transformTaskID .TaskID }}',
+    python_callable={{ .Name }},
+    op_args=[
+        {{ transformTaskID .TaskID }}_data
+    ],
+    dag=dag,
+)
+{{ end }}
 
 # ##################### DIRECTED ACYLIC GRAPH DEFINITION ##########################
 {{range $conn := .Connections}}
